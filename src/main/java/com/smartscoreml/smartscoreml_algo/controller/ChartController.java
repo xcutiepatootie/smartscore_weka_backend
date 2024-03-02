@@ -3,7 +3,6 @@ package com.smartscoreml.smartscoreml_algo.controller;
 import com.smartscoreml.smartscoreml_algo.service.ClusteringService;
 import com.smartscoreml.smartscoreml_algo.service.WekaService;
 import org.jfree.chart.ChartFactory;
-import org.jfree.chart.ChartPanel;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.data.xy.XYSeries;
@@ -17,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
-import javax.swing.*;
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
