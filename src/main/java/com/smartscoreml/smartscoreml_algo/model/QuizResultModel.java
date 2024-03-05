@@ -8,14 +8,14 @@ public class QuizResultModel {
 
     @Id
     private String id;
-    private int score;
-    private int time;
-    private int out_of_focus;
-    private int answers_clicked;
+    private double score;
+    private double time;
+    private double out_of_focus;
+    private double answers_clicked;
     private String quizTakenId;
     private String studentId;
 
-    private int retriesLeft;
+    private double retriesLeft;
 
     public String getId() {
         return id;
@@ -25,35 +25,35 @@ public class QuizResultModel {
         this.id = id;
     }
 
-    public int getScore() {
+    public double getScore() {
         return score;
     }
 
-    public void setScore(int score) {
+    public void setScore(double score) {
         this.score = score;
     }
 
-    public int getTime() {
+    public double getTime() {
         return time;
     }
 
-    public void setTime(int time) {
+    public void setTime(double time) {
         this.time = time;
     }
 
-    public int getOut_of_focus() {
+    public double getOut_of_focus() {
         return out_of_focus;
     }
 
-    public void setOut_of_focus(int out_of_focus) {
+    public void setOut_of_focus(double out_of_focus) {
         this.out_of_focus = out_of_focus;
     }
 
-    public int getAnswers_clicked() {
+    public double getAnswers_clicked() {
         return answers_clicked;
     }
 
-    public void setAnswers_clicked(int answers_clicked) {
+    public void setAnswers_clicked(double answers_clicked) {
         this.answers_clicked = answers_clicked;
     }
 
@@ -73,12 +73,61 @@ public class QuizResultModel {
         this.studentId = studentId;
     }
 
-    public int getRetriesLeft() {
+    public double getRetriesLeft() {
         return retriesLeft;
     }
 
-    public void setRetriesLeft(int retriesLeft) {
+    public void setRetriesLeft(double retriesLeft) {
         this.retriesLeft = retriesLeft;
+    }
+
+
+    private double totalScore;
+    private double totalTime;
+    private double totalOutOfFocus;
+    private double totalAnswersClicked;
+    private double totalRetriesLeft;
+    private int count;
+
+    public void addScore(double score) {
+        totalScore += score;
+        count++;
+    }
+
+    public void addTime(double time) {
+        totalTime += time;
+    }
+
+    public void addOutOfFocus(double outOfFocus) {
+        totalOutOfFocus += outOfFocus;
+    }
+
+    public void addAnswersClicked(double answersClicked) {
+        totalAnswersClicked += answersClicked;
+    }
+
+    public void addRetriesLeft(double retriesLeft) {
+        totalRetriesLeft += retriesLeft;
+    }
+
+    public double getAverageScore() {
+        return totalScore / count;
+    }
+
+    public double getAverageTime() {
+        return totalTime / count;
+    }
+
+    public double getAverageOutOfFocus() {
+        return totalOutOfFocus / count;
+    }
+
+    public double getAverageAnswersClicked() {
+        return totalAnswersClicked / count;
+    }
+
+    public double getAverageRetriesLeft() {
+        return totalRetriesLeft / count;
     }
 
     @Override
