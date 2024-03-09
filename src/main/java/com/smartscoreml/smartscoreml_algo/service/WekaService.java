@@ -5,6 +5,7 @@ import com.smartscoreml.smartscoreml_algo.model.QuizTakenModel;
 import com.smartscoreml.smartscoreml_algo.model.StudentModel;
 import com.smartscoreml.smartscoreml_algo.repository.QuizResultRepo;
 import com.smartscoreml.smartscoreml_algo.repository.QuizTakenRepo;
+import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import weka.core.*;
@@ -21,83 +22,67 @@ public class WekaService {
     QuizResultRepo resultRepo;
 
     public Instances getWekaInstancesFromDB() {
+
         List<QuizTakenModel> takenData = takenRepo.findByisDone(true);
         List<QuizResultModel> resultData = resultRepo.findAll();
-        //System.out.println(resultData);
 
-        List<QuizTakenModel> notDone_takenData = takenRepo.findByisDone(false);
-        // System.out.println(notDone_takenData);
+        //System.out.println(takenData);
 
-        // Create a map of quizTakenId to QuizTakenModel
-        Map<String, QuizTakenModel> takenMap = new HashMap<>();
-        for (QuizTakenModel takenModel : takenData) {
-            takenMap.put(takenModel.getId(), takenModel);
+        // 65d75dcf67e94549c1fad778
+
+        ObjectId quizId = new ObjectId("65e5d5b825d258c080b78f63");
+
+        // Get QuizTaken using QuizId
+        List<QuizTakenModel> byQuiz = takenRepo.findByQuizId(quizId);
+        Map<String, QuizTakenModel> byquizMap = new HashMap<>();
+        for (QuizTakenModel byquizMappedList : byQuiz) {
+            byquizMap.put(byquizMappedList.getId(), byquizMappedList);
         }
-
-        Map<String, QuizResultModel> resultMap = new HashMap<>();
-        for (QuizResultModel resultModel : resultData) {
-            // Create a key using the combination of quizTakenId and studentId
-            //String key = resultModel.getQuizTakenId() + "_" + resultModel.getStudentId();
-            resultMap.put(resultModel.getStudentId(), resultModel);
-        }
-        // Print out the map
-        for (Map.Entry<String, QuizResultModel> entry : resultMap.entrySet()) {
+        System.out.println("============================");
+        System.out.println("Get quizTaken where quizId is : " + quizId);
+        /*for (Map.Entry<String, QuizTakenModel> entry : byquizMap.entrySet()) {
             System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
         }
-        System.out.println(resultMap.size());
+        System.out.println("============================");*/
 
-        // Create a set of all (quizTakenId, studentId) pairs from notDone_takenData
-        Set<String> notDonePairs = new HashSet<>();
-        for (QuizTakenModel taken : notDone_takenData) {
-            String pair = taken.getId() + "_" + taken.getStudentId();
-            notDonePairs.add(pair);
+
+        //Get All Results from QuizResults
+        Map<String, QuizResultModel> allResultMap = new HashMap<>();
+        for (QuizResultModel allResultList : resultData) {
+            allResultMap.put(allResultList.getId(), allResultList);
         }
+        System.out.println();
+      /*  System.out.println("============================");
+        System.out.println("Get All Results ");
+        for (Map.Entry<String, QuizResultModel> entry : allResultMap.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+        }
+        System.out.println("============================");*/
 
-        // System.out.println("Set: " + notDonePairs);
+        // Create a new map to store QuizResultModel objects associated with QuizTakenModel
+        Map<String, QuizResultModel> filteredResultsMap = new HashMap<>();
 
+        // Iterate over each entry in the second map
+        for (Map.Entry<String, QuizResultModel> entry : allResultMap.entrySet()) {
+            String quizTakenId = entry.getValue().getQuizTakenId(); // Get the quizTakenId from the QuizResultModel
 
-        // Remove QuizResultModel objects from resultData where quizTakenId and studentId match any entry in notDone_takenData
-        Iterator<QuizResultModel> iterator = resultData.iterator();
-        while (iterator.hasNext()) {
-            QuizResultModel result = iterator.next();
-            String pair = result.getQuizTakenId() + "_" + result.getStudentId();
-            if (notDonePairs.contains(pair)) {
-                iterator.remove();
+            // Check if the quizTakenId exists in the first map
+            if (byquizMap.containsKey(quizTakenId)) {
+                // If the quizTakenId exists in the first map, add the QuizResultModel to the filteredResultsMap
+                filteredResultsMap.put(entry.getKey(), entry.getValue());
             }
         }
-
-        // Now resultData contains only the QuizResultModel objects where quizTakenId and studentId do not match any entry in notDone_takenData
-        //  System.out.println(resultData);
-        // System.out.println("New " + resultMap.size());
-
-        // Iterate through QuizResultModel and compare with QuizTakenModel
-        for (Map.Entry<String, QuizTakenModel> entry : takenMap.entrySet()) {
-            String key = entry.getKey(); // Get the key
-            QuizTakenModel value = entry.getValue(); // Get the value
-
-            // Print key and value
-            //     System.out.println("Key: " + key + ", Value: " + value);
-        }
-        System.out.println("-------");
-        for (Map.Entry<String, QuizResultModel> entry : resultMap.entrySet()) {
-            String key = entry.getKey(); // Get the key
-            QuizResultModel value = entry.getValue(); // Get the value
-
-            // Print key and value
-            //    System.out.println("Key: " + key + ", Value: " + value);
-        }
-        System.out.println("-------");
 
         // Create a new map to store retriesLeft for each quizTakenId
         Map<String, Integer> retriesLeftMap = new HashMap<>();
 
         // Iterate through QuizTakenModel and populate retriesLeftMap
-        for (QuizTakenModel takenModel : takenMap.values()) {
+        for (QuizTakenModel takenModel : byquizMap.values()) {
             retriesLeftMap.put(takenModel.getId(), takenModel.getRetriesLeft());
         }
 
         // Iterate through QuizResultModel and add retriesLeft from retriesLeftMap
-        for (QuizResultModel resultModel : resultMap.values()) {
+        for (QuizResultModel resultModel : filteredResultsMap.values()) {
             String quizTakenId = resultModel.getQuizTakenId();
             Integer retriesLeft = retriesLeftMap.get(quizTakenId);
             if (retriesLeft != null) {
@@ -107,14 +92,33 @@ public class WekaService {
                 //     System.out.println("QuizResultModel: " + resultModel);
             }
         }
-        System.out.println(resultMap.size());
-        System.out.println(takenMap.size());
+
+// Print or use the filteredResultsMap as needed
+        System.out.println("============================");
+        System.out.println("Filtered Results Based on QuizTaken");
+        for (Map.Entry<String, QuizResultModel> entry : filteredResultsMap.entrySet()) {
+            System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
+        }
+        System.out.println("============================");
+
+        // Create a new list to store filtered QuizResultModel objects
+        List<QuizResultModel> filteredResultsList = new ArrayList<>();
+
+// Iterate over each entry in the filteredResultsMap and add the values to the list
+        for (Map.Entry<String, QuizResultModel> entry : filteredResultsMap.entrySet()) {
+            filteredResultsList.add(entry.getValue());
+        }
+
+
+
+
+
 
         // Create a new map to store student-wise data
         Map<String, StudentModel> studentData = new HashMap<>();
 
-// Iterate through QuizResultModel and populate studentData
-        for (QuizResultModel resultModel : resultData) {
+        // Iterate through QuizResultModel and populate studentData
+        for (QuizResultModel resultModel : filteredResultsList) {
             String studentId = resultModel.getStudentId();
             if (studentData.containsKey(studentId)) {
                 StudentModel student = studentData.get(studentId);
@@ -147,7 +151,7 @@ public class WekaService {
             System.out.println("Average Out of Focus: " + String.format("%.2f", student.getAverageOutOfFocus()));
             System.out.println("Average Answers Clicked: " + String.format("%.2f", student.getAverageAnswersClicked()));
             System.out.println("Average Retries Left: " + String.format("%.2f", student.getAverageRetriesLeft()));
-            System.out.println("Count in db: "+student.getCount());
+            System.out.println("Count in db: " + student.getCount());
             System.out.println();
 
         }
@@ -156,22 +160,28 @@ public class WekaService {
             System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
         }
 
+        // Create a new list to store StudentModel objects
         List<StudentModel> studentList = new ArrayList<>();
-        for (Map.Entry<String, StudentModel> entry : studentData.entrySet()) {
-            String studentId = entry.getKey();
-            studentList.add(entry.getValue());
-        }
-        System.out.println("=================================================");
-        for (StudentModel entry : studentList) {
-            System.out.println("Key: " + entry.getStudentId() + ", Value: " + entry.toString());
+
+// Iterate over each entry in the studentData map and add the values to the list
+        for (StudentModel student : studentData.values()) {
+            studentList.add(student);
         }
 
+// Print or use the studentList as needed
+        System.out.println("============================");
+        System.out.println("Student List:");
+        for (StudentModel student : studentList) {
+            System.out.println("Student: " + student);
+        }
+        System.out.println("============================");
 
 
-
-
-        System.out.println(resultData.size());
-       // System.out.println(resultData);
+        System.out.println("Byquiz size: " + byquizMap.size());
+        System.out.println("ALl size: " + allResultMap.size());
+        System.out.println("filtered size: "+ filteredResultsMap.size());
+        System.out.println("final size: "+studentData.size());
+        System.out.println("Students List size: "+studentList.size());
 
         Instances wekaInstance = transformToWekaInstances(studentList);
         return wekaInstance;
