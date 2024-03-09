@@ -2,6 +2,7 @@ package com.smartscoreml.smartscoreml_algo.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instance;
 import weka.core.Instances;
@@ -33,7 +34,7 @@ public class ClusteringService {
         sKmeans.setDontReplaceMissingValues(true);
         sKmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.RANDOM, SimpleKMeans.TAGS_SELECTION));
         //sKmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.KMEANS_PLUS_PLUS, SimpleKMeans.TAGS_SELECTION));
-        sKmeans.setDistanceFunction(new weka.core.EuclideanDistance());
+        sKmeans.setDistanceFunction(new weka.core.ManhattanDistance());
         sKmeans.setSeed(10);
         sKmeans.setPreserveInstancesOrder(true);
 
@@ -46,6 +47,47 @@ public class ClusteringService {
         return sKmeans;
     }
 
+    public HierarchicalClusterer loadHierarchical(Instances data) throws Exception {
+        HierarchicalClusterer hierarchicalClusterer = new HierarchicalClusterer();
+        String[] options = {"-L", "AVERAGE"};
+
+        hierarchicalClusterer.setNumClusters(2);
+        hierarchicalClusterer.setOptions(options);
+
+        hierarchicalClusterer.buildClusterer(data);
+        return hierarchicalClusterer;
+    }
+
+
+    public int[] getClusterAssignments_hier(Instances data, HierarchicalClusterer hierarchicalClusterer) throws Exception {
+
+        int[] clusterAssignments = new int[data.numInstances()];
+
+        // Get the cluster assignments for each instance and store in the array
+        for (int i = 0; i < data.numInstances(); i++) {
+            Instance instance = data.instance(i);
+            clusterAssignments[i] = hierarchicalClusterer.clusterInstance(instance);
+        }
+
+        // Print or process the cluster assignments as needed
+        for (int i = 0; i < data.numInstances(); i++) {
+            System.out.println("Instance " + i + " is assigned to cluster " + clusterAssignments[i]);
+        }
+        return clusterAssignments;
+    }
+
+    public int[] getClusterAssignments_hier() throws Exception {
+        Instances data = loadData();
+
+        HierarchicalClusterer hierarchicalClusterer = loadHierarchical(data);
+        System.out.println("Assignments: " + Arrays.toString(getClusterAssignments_hier(data,hierarchicalClusterer)) + "\n" + hierarchicalClusterer);
+
+
+        int[] assignments = getClusterAssignments_hier(data, hierarchicalClusterer);
+        printAverageValues_hier(data, assignments, hierarchicalClusterer);
+        return assignments;
+
+    }
 
     public int[] getClusterAssignments(Instances data, SimpleKMeans kMeans) throws Exception {
         return kMeans.getAssignments();
@@ -87,6 +129,31 @@ public class ClusteringService {
     public void printAverageValues(Instances data, int[] assignments, SimpleKMeans kMeans) {
         // Group instances by cluster
         Instances[] clusters = new Instances[kMeans.getNumClusters()];
+        for (int i = 0; i < clusters.length; i++) {
+            clusters[i] = new Instances(data, 0);
+        }
+        for (int i = 0; i < data.numInstances(); i++) {
+            clusters[assignments[i]].add(data.instance(i));
+        }
+
+        // Calculate and print average values for each cluster
+        for (int i = 0; i < clusters.length; i++) {
+            System.out.println("Cluster " + (i + 1) + ":");
+            Instances cluster = clusters[i];
+            for (int j = 0; j < cluster.numAttributes(); j++) {
+                if (cluster.attribute(j).isNumeric()) {
+                    double mean = cluster.meanOrMode(j);
+                    System.out.println("Attribute " + cluster.attribute(j).name() + ": " + mean);
+                }
+            }
+            System.out.println();
+        }
+
+    }
+
+    public void printAverageValues_hier(Instances data, int[] assignments, HierarchicalClusterer hierarchicalClusterer) {
+        // Group instances by cluster
+        Instances[] clusters = new Instances[hierarchicalClusterer.getNumClusters()];
         for (int i = 0; i < clusters.length; i++) {
             clusters[i] = new Instances(data, 0);
         }
