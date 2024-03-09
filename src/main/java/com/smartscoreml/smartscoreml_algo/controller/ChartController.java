@@ -50,6 +50,7 @@ public class ChartController {
             series[i] = new XYSeries("Cluster " + (i + 1));
         }
         for (int i = 0; i < data.numInstances(); i++) {
+
             series[assignments[i]].add(data.instance(i).value(0), data.instance(i).value(1));
         }
         for (int i = 0; i < series.length; i++) {
@@ -65,7 +66,7 @@ public class ChartController {
         dataset.addSeries(centroidSeries);
 
         // Create chart
-        JFreeChart chart = ChartFactory.createScatterPlot("Cluster Plot", "X", "Y", dataset);
+        JFreeChart chart = ChartFactory.createScatterPlot("Cluster Plot", String.valueOf(data.attribute("score")), String.valueOf(data.attribute("time")), dataset);
 
         // Convert chart to image bytes
         byte[] imageBytes = null;
