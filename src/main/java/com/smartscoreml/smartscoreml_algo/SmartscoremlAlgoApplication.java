@@ -30,17 +30,17 @@ public class SmartscoremlAlgoApplication {
 	@PostConstruct
 	public void init() throws Exception {
 		// Now wekaService should be initialized by Spring
-		Instances wekaInstances = wekaService.getWekaInstancesFromDB();
-		System.out.println(wekaInstances);
+
 
 		System.out.println("==========================================");
-		int[] assignments = clusteringService.getClusterAssignments();
+		/*int[] assignments = clusteringService.getClusterAssignments();
 
 		clusteringService.printStudentClusterMap(wekaInstances,assignments);
 
 		List<StudentClusterModel> studentClusters = new ArrayList<>();
 		Map<String, Integer> studentClusterMap = clusteringService.createStudentClusterMap(wekaInstances, assignments);
 
+		clusteringService.runFindElbowPoint();*/
 
 
 

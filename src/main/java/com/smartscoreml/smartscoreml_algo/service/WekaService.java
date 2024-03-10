@@ -21,7 +21,7 @@ public class WekaService {
     @Autowired
     QuizResultRepo resultRepo;
 
-    public Instances getWekaInstancesFromDB() {
+    public Instances getWekaInstancesFromDB(String quizIdstr) {
 
         List<QuizTakenModel> takenData = takenRepo.findByisDone(true);
         List<QuizResultModel> resultData = resultRepo.findAll();
@@ -30,7 +30,7 @@ public class WekaService {
 
         // 65d75dcf67e94549c1fad778
 
-        ObjectId quizId = new ObjectId("65e5d5b825d258c080b78f63");
+        ObjectId quizId = new ObjectId(quizIdstr);
 
         // Get QuizTaken using QuizId
         List<QuizTakenModel> byQuiz = takenRepo.findByQuizId(quizId);
@@ -227,6 +227,7 @@ public class WekaService {
         // Example: wekaInstances.add(new Attribute("attributeName"));
         // Iterate through mongoData and add instances
         // Example: wekaInstances.add(new DenseInstance(new double[]{data1, data2, ...}));
+        System.out.println(wekaInstances);
         return wekaInstances;
     }
 

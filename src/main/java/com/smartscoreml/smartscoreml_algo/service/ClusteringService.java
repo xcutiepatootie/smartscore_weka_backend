@@ -4,9 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
-import weka.core.Instance;
-import weka.core.Instances;
-import weka.core.SelectedTag;
+import weka.core.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -21,20 +19,29 @@ public class ClusteringService {
     @Autowired
     WekaService wekaService;
 
-    public Instances loadData() throws Exception {
-        Instances data = wekaService.getWekaInstancesFromDB();
+
+    public Instances loadData(String quizId) throws Exception {
+        Instances data = wekaService.getWekaInstancesFromDB(quizId);
         return data;
 
     }
 
+
+
     public SimpleKMeans loadSimpleKmeans(Instances data) throws Exception {
         SimpleKMeans sKmeans = new SimpleKMeans();
+        EuclideanDistance euclideanDistance = new EuclideanDistance();
+        euclideanDistance.setDontNormalize(true);
+        ManhattanDistance manhattanDistance = new ManhattanDistance();
+        manhattanDistance.setDontNormalize(true);
+
         sKmeans.setNumClusters(2);
         sKmeans.setMaxIterations(500);
         sKmeans.setDontReplaceMissingValues(true);
         sKmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.RANDOM, SimpleKMeans.TAGS_SELECTION));
         //sKmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.KMEANS_PLUS_PLUS, SimpleKMeans.TAGS_SELECTION));
-        sKmeans.setDistanceFunction(new weka.core.ManhattanDistance());
+        sKmeans.setDistanceFunction(manhattanDistance);
+        sKmeans.setDontReplaceMissingValues(true);
         sKmeans.setSeed(10);
         sKmeans.setPreserveInstancesOrder(true);
 
@@ -59,7 +66,7 @@ public class ClusteringService {
     }
 
 
-    public int[] getClusterAssignments_hier(Instances data, HierarchicalClusterer hierarchicalClusterer) throws Exception {
+    /*public int[] getClusterAssignments_hier(Instances data, HierarchicalClusterer hierarchicalClusterer) throws Exception {
 
         int[] clusterAssignments = new int[data.numInstances()];
 
@@ -87,14 +94,14 @@ public class ClusteringService {
         printAverageValues_hier(data, assignments, hierarchicalClusterer);
         return assignments;
 
-    }
+    }*/
 
     public int[] getClusterAssignments(Instances data, SimpleKMeans kMeans) throws Exception {
         return kMeans.getAssignments();
     }
 
-    public int[] getClusterAssignments() throws Exception {
-        Instances data = loadData();
+    public int[] getClusterAssignments(String quizId) throws Exception {
+        Instances data = loadData(quizId);
 
         SimpleKMeans sKmeans = loadSimpleKmeans(data);
         sKmeans.getAssignments();
@@ -177,14 +184,14 @@ public class ClusteringService {
     }
 
 
-    public int runFindElbowPoint() throws Exception {
+    public int runFindElbowPoint(String quizId) throws Exception {
         // Perform KMeans clustering for various values of k
         int maxK = 10; // Maximum number of clusters to try
         double[] wcss = new double[maxK];
 
         for (int k = 1; k <= maxK; k++) {
             SimpleKMeans kmeans = new SimpleKMeans();
-            Instances data = loadData();
+            Instances data = loadData(quizId);
             kmeans.setNumClusters(k);
             data.deleteAttributeAt(0);
             kmeans.buildClusterer(data);

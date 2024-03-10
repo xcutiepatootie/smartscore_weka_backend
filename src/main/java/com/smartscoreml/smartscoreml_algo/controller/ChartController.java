@@ -31,10 +31,10 @@ public class ChartController {
     ClusteringService clusteringService;
 
     @GetMapping("/plot")
-    public ResponseEntity<byte[]> plotClusters() throws Exception {
-        Instances data = wekaService.getWekaInstancesFromDB();
+    public ResponseEntity<byte[]> plotClusters(String quizId) throws Exception {
+        Instances data = wekaService.getWekaInstancesFromDB(quizId);
         SimpleKMeans kMeans = clusteringService.loadSimpleKmeans(data);
-        int[] assignments = clusteringService.getClusterAssignments();
+        int[] assignments = clusteringService.getClusterAssignments(quizId);
 
         byte[] imageBytes = generateClusterPlot(data, assignments, kMeans);
         return ResponseEntity.ok()
