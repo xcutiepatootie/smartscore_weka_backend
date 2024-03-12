@@ -38,18 +38,7 @@ public class StudentModel {
         this.totalTime = totalTime;
     }
 
-    @Override
-    public String toString() {
-        return "StudentModel{" +
-                "studentId='" + studentId + '\'' +
-                ", totalScore=" + totalScore +
-                ", totalTime=" + totalTime +
-                ", totalOutOfFocus=" + totalOutOfFocus +
-                ", totalAnswersClicked=" + totalAnswersClicked +
-                ", totalRetriesLeft=" + totalRetriesLeft +
-                ", count=" + count +
-                '}';
-    }
+
 
     public double getTotalOutOfFocus() {
         return totalOutOfFocus;
@@ -130,4 +119,16 @@ public class StudentModel {
          count++;
     }
 
+    @Override
+    public String toString() {
+        return "StudentModel{" +
+                "studentId='" + studentId + '\'' +
+                ", totalScore=" + totalScore +
+                ", totalTime=" + totalTime +
+                ", totalOutOfFocus=" + totalOutOfFocus +
+                ", totalAnswersClicked=" + totalAnswersClicked +
+                ", totalRetriesLeft=" + totalRetriesLeft +
+                ", count=" + count +
+                '}';
+    }
 }
