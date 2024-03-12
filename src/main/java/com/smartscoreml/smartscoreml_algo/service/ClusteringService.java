@@ -1,5 +1,6 @@
 package com.smartscoreml.smartscoreml_algo.service;
 
+import com.smartscoreml.smartscoreml_algo.model.ClusterAverageValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import weka.clusterers.HierarchicalClusterer;
@@ -157,6 +158,30 @@ public class ClusteringService {
         }
 
     }
+    public ClusterAverageValues[] calculateAverageValues(Instances data, int[] assignments, SimpleKMeans kMeans) {
+        ClusterAverageValues[] clusterAverages = new ClusterAverageValues[kMeans.getNumClusters()];
+
+        // Initialize cluster averages
+        for (int i = 0; i < clusterAverages.length; i++) {
+            clusterAverages[i] = new ClusterAverageValues(i + 1, new HashMap<>());
+        }
+
+        // Calculate average values for each cluster
+        for (int i = 0; i < data.numAttributes(); i++) {
+            if (data.attribute(i).isNumeric()) {
+                for (int j = 0; j < data.numInstances(); j++) {
+                    int clusterIndex = assignments[j];
+                    double value = data.instance(j).value(i);
+                    clusterAverages[clusterIndex].getAttributeAverages().merge(data.attribute(i).name(),
+                            value, (oldValue, newValue) -> (oldValue + newValue) / 2);
+                }
+            }
+        }
+
+        return clusterAverages;
+    }
+
+
 
     public void printAverageValues_hier(Instances data, int[] assignments, HierarchicalClusterer hierarchicalClusterer) {
         // Group instances by cluster
