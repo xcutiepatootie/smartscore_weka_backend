@@ -23,12 +23,39 @@ public class WekaService {
 
     public Instances getWekaInstancesFromDB(String quizIdstr) {
 
+        // Fetch Filtered Results from DB
+        List<QuizResultModel> filteredResultsList = getFilteredResults(quizIdstr);
+
+        Map<String, StudentModel> studentData = processQuizResults(filteredResultsList);
+
+        // Create a new list to store StudentModel objects
+        List<StudentModel> studentList = new ArrayList<>();
+
+// Iterate over each entry in the studentData map and add the values to the list
+        for (StudentModel student : studentData.values()) {
+            studentList.add(student);
+        }
+
+// Print or use the studentList as needed
+        System.out.println("============================");
+        System.out.println("Student List:");
+        for (StudentModel student : studentList) {
+            System.out.println("Student: " + student);
+        }
+        System.out.println("============================");
+
+
+        System.out.println("final size: " + studentData.size());
+        System.out.println("Students List size: " + studentList.size());
+
+        Instances wekaInstance = transformToWekaInstances(studentList);
+        return wekaInstance;
+    }
+
+    public List<QuizResultModel> getFilteredResults(String quizIdstr) {
+
         List<QuizTakenModel> takenData = takenRepo.findByisDone(true);
         List<QuizResultModel> resultData = resultRepo.findAll();
-
-        //System.out.println(takenData);
-
-        // 65d75dcf67e94549c1fad778
 
         ObjectId quizId = new ObjectId(quizIdstr);
 
@@ -109,11 +136,14 @@ public class WekaService {
             filteredResultsList.add(entry.getValue());
         }
 
+        System.out.println("Byquiz size: " + byquizMap.size());
+        System.out.println("ALl size: " + allResultMap.size());
+        System.out.println("filtered size: " + filteredResultsMap.size());
 
+        return new ArrayList<>(filteredResultsMap.values());
+    }
 
-
-
-
+    public Map<String, StudentModel> processQuizResults(List<QuizResultModel> filteredResultsList) {
         // Create a new map to store student-wise data
         Map<String, StudentModel> studentData = new HashMap<>();
 
@@ -159,34 +189,14 @@ public class WekaService {
         for (Map.Entry<String, StudentModel> entry : studentData.entrySet()) {
             System.out.println("Key: " + entry.getKey() + ", Value: " + entry.getValue());
         }
-
-        // Create a new list to store StudentModel objects
-        List<StudentModel> studentList = new ArrayList<>();
-
-// Iterate over each entry in the studentData map and add the values to the list
-        for (StudentModel student : studentData.values()) {
-            studentList.add(student);
-        }
-
-// Print or use the studentList as needed
-        System.out.println("============================");
-        System.out.println("Student List:");
-        for (StudentModel student : studentList) {
-            System.out.println("Student: " + student);
-        }
-        System.out.println("============================");
-
-
-        System.out.println("Byquiz size: " + byquizMap.size());
-        System.out.println("ALl size: " + allResultMap.size());
-        System.out.println("filtered size: "+ filteredResultsMap.size());
-        System.out.println("final size: "+studentData.size());
-        System.out.println("Students List size: "+studentList.size());
-
-        Instances wekaInstance = transformToWekaInstances(studentList);
-        return wekaInstance;
+        return studentData;
     }
-    // Method to calculate the average results of each student
+
+    public Map<String, StudentModel> processQuizResults(String quizIdstr) {
+        // Assuming filteredResultsList is obtained from somewhere else
+        List<QuizResultModel> filteredResultsList = getFilteredResults(quizIdstr); // You need to implement this method
+        return processQuizResults(filteredResultsList);
+    }
 
 
     private Instances transformToWekaInstances(List<StudentModel> mongoData) {
