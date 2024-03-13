@@ -12,6 +12,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
@@ -19,6 +20,7 @@ import weka.core.Instances;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 
 @RestController
 @RequestMapping("/charts")
@@ -31,7 +33,7 @@ public class ChartController {
     ClusteringService clusteringService;
 
     @GetMapping("/plot")
-    public ResponseEntity<byte[]> plotClusters(String quizId) throws Exception {
+    public ResponseEntity<byte[]> plotClusters(@RequestParam("quizId") String quizId) throws Exception {
         Instances data = wekaService.getWekaInstancesFromDB(quizId);
         SimpleKMeans kMeans = clusteringService.loadSimpleKmeans(data);
         int[] assignments = clusteringService.getClusterAssignments(quizId);
@@ -40,6 +42,20 @@ public class ChartController {
         return ResponseEntity.ok()
                 .contentType(MediaType.IMAGE_PNG)
                 .body(imageBytes);
+    }
+
+    @GetMapping("/plot64")
+    public ResponseEntity<String> plotClustersBase64(@RequestParam("quizId") String quizId) throws Exception {
+        Instances data = wekaService.getWekaInstancesFromDB(quizId);
+        SimpleKMeans kMeans = clusteringService.loadSimpleKmeans(data);
+        int[] assignments = clusteringService.getClusterAssignments(quizId);
+
+        byte[] imageBytes = generateClusterPlot(data, assignments, kMeans);
+        String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(base64EncodedImage);
     }
 
     private byte[] generateClusterPlot(Instances data, int[] assignments, SimpleKMeans kMeans) {
