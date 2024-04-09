@@ -6,10 +6,7 @@ import com.smartscoreml.smartscoreml_algo.model.StudentModel;
 import com.smartscoreml.smartscoreml_algo.service.ClusteringService;
 import com.smartscoreml.smartscoreml_algo.service.WekaService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
@@ -22,6 +19,8 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
+@CrossOrigin(origins = {"http://localhost:3000","https://prod-stage--smartscore.netlify.app"})
+
 public class SmartScoreController {
     @Autowired
     private ClusteringService clusteringService;
@@ -60,13 +59,16 @@ public class SmartScoreController {
     }
 
     @GetMapping("/student_records_charts")
-    public Map<String, List<StudentModel>> getStudentRecords_charts(@RequestParam("quizId") String quizId) throws Exception {
+    public Map<String, List<StudentModel>> getStudentRecords_charts(@RequestParam("quizId") String quizId, @RequestParam("studentId") String studentId) throws Exception {
         Instances data = clusteringService.loadData(quizId); // Implement loadData method as needed
         System.out.println(data);
 
         Map<String, StudentModel> studentDataMap = wekaService.processQuizResults(quizId);
 
         List<StudentModel> studentRecords = new ArrayList<>(studentDataMap.values());
+
+        List<StudentModel> userValue = new ArrayList<>();
+        userValue.add(studentDataMap.get(studentId));
 
         // Sort the student records by average score in descending order
         List<StudentModel> sortedRecords_score = studentRecords.stream()
@@ -154,6 +156,7 @@ public class SmartScoreController {
         }
 
         Map<String, List<StudentModel>> result = new HashMap<>();
+        result.put("userValue", userValue);
         result.put("scores", distinctHighestScores);
         result.put("time", distinctLowestTime);
         result.put("answersclicked", distinctAnswersClicked);
