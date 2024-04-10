@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = {"http://localhost:3000","https://prod-stage--smartscore.netlify.app"})
+@CrossOrigin(origins = {"http://localhost:3000","https://prod-stage--smartscore.netlify.app","https://smartscore.netlify.app"})
 
 public class SmartScoreController {
     @Autowired
