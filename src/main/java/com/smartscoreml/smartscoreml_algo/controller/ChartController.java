@@ -21,7 +21,7 @@ import java.util.Base64;
 
 @RestController
 @RequestMapping("/charts")
-@CrossOrigin(origins = {"http://localhost:3000","https://prod-stage--smartscore.netlify.app","https://smartscore.netlify.app"})
+@CrossOrigin(origins = {"http://localhost:3000","https://prod-stage--smartscore.netlify.app","https://smartscore.netlify.app","https://main--smartscore.netlify.app"})
 
 public class ChartController {
 
