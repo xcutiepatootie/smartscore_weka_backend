@@ -10,12 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.HashMap;
-import java.util.stream.Collectors;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api")

@@ -3,7 +3,6 @@ package com.smartscoreml.smartscoreml_algo.repository;
 import com.smartscoreml.smartscoreml_algo.model.QuizTakenModel;
 import org.bson.types.ObjectId;
 import org.springframework.data.mongodb.repository.MongoRepository;
-import org.springframework.data.mongodb.repository.Query;
 
 import java.util.List;
 

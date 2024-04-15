@@ -1,18 +1,11 @@
 package com.smartscoreml.smartscoreml_algo;
 
-import com.smartscoreml.smartscoreml_algo.model.StudentClusterModel;
 import com.smartscoreml.smartscoreml_algo.service.ClusteringService;
 import com.smartscoreml.smartscoreml_algo.service.WekaService;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import weka.clusterers.SimpleKMeans;
-import weka.core.Instances;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
 
 @SpringBootApplication
 public class SmartscoremlAlgoApplication {
