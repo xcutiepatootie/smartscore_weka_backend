@@ -5,6 +5,8 @@ import com.smartscoreml.smartscoreml_algo.service.WekaService;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.util.ShapeUtils;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,14 +79,21 @@ public class ChartController {
 
         // Add centroids
         Instances centroids = kMeans.getClusterCentroids();
+        System.out.println("Centroids: "+centroids);
         XYSeries centroidSeries = new XYSeries("Centroids");
         for (int i = 0; i < centroids.numInstances(); i++) {
-            centroidSeries.add(centroids.instance(i).value(0), centroids.instance(i).value(1));
+            centroidSeries.add(centroids.instance(i).value(xIndex), centroids.instance(i).value(yIndex));
         }
         dataset.addSeries(centroidSeries);
 
         // Create chart
         JFreeChart chart = ChartFactory.createScatterPlot("Cluster Plot", xValue, yValue, dataset);
+
+        // Get the plot
+        XYPlot plot = (XYPlot) chart.getPlot();
+
+// Increase the size of the centroid markers
+        plot.getRenderer().setSeriesShape(kMeans.getNumClusters(), ShapeUtils.createDiamond(8));
 
         // Convert chart to image bytes
         byte[] imageBytes = null;
@@ -106,7 +115,7 @@ public class ChartController {
             case "time" -> 1;
             case "out_of_focus" -> 2;
             case "answers_clicked" -> 3;
-            case "retries left" -> 4;
+            case "retries_left" -> 4;
             default ->
                 // Handle invalid selection
                     -1;

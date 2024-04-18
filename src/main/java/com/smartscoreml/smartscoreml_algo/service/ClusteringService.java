@@ -30,12 +30,15 @@ public class ClusteringService {
 
     public SimpleKMeans loadSimpleKmeans(Instances data) throws Exception {
         SimpleKMeans sKmeans = new SimpleKMeans();
+        int no_Clusters = runFindElbowPoint(data);
+        System.out.println("Number of cluster: "+no_Clusters);
+
         EuclideanDistance euclideanDistance = new EuclideanDistance();
         euclideanDistance.setDontNormalize(true);
         ManhattanDistance manhattanDistance = new ManhattanDistance();
         manhattanDistance.setDontNormalize(true);
 
-        sKmeans.setNumClusters(2);
+        sKmeans.setNumClusters(no_Clusters);
         sKmeans.setMaxIterations(500);
         sKmeans.setDontReplaceMissingValues(true);
         sKmeans.setInitializationMethod(new SelectedTag(SimpleKMeans.RANDOM, SimpleKMeans.TAGS_SELECTION));
@@ -208,17 +211,17 @@ public class ClusteringService {
     }
 
 
-    public int runFindElbowPoint(String quizId) throws Exception {
+    public int runFindElbowPoint(Instances dataParams) throws Exception {
+        System.out.println("Data Params: "+dataParams);
         // Perform KMeans clustering for various values of k
         int maxK = 10; // Maximum number of clusters to try
         double[] wcss = new double[maxK];
 
         for (int k = 1; k <= maxK; k++) {
             SimpleKMeans kmeans = new SimpleKMeans();
-            Instances data = loadData(quizId);
             kmeans.setNumClusters(k);
-            data.deleteAttributeAt(0);
-            kmeans.buildClusterer(data);
+
+            kmeans.buildClusterer(dataParams);
 
             // Calculate within-cluster sum of squares
             wcss[k - 1] = kmeans.getSquaredError();
