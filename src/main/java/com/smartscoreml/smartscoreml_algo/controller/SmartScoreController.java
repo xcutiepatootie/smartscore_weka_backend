@@ -40,6 +40,38 @@ public class SmartScoreController {
         return studentClusters;
     }
 
+    @GetMapping("/assignments_hc")
+    public List<StudentClusterModel> getClusterAssignments_hier(@RequestParam("quizId") String quizId) throws Exception {
+        Instances data = clusteringService.loadData(quizId); // Implement loadData method as needed
+        System.out.println(data);
+        int[] assignments = clusteringService.getClusterAssignments_hier(quizId); // Implement buildClustererAndGetAssignments method as needed
+
+        List<StudentClusterModel> studentClusters = new ArrayList<>();
+        Map<String, Integer> studentClusterMap = clusteringService.createStudentClusterMap(data, assignments);
+
+        for (Map.Entry<String, Integer> entry : studentClusterMap.entrySet()) {
+            studentClusters.add(new StudentClusterModel(entry.getKey(), entry.getValue()));
+        }
+
+        return studentClusters;
+    }
+
+    @GetMapping("/assignments_db")
+    public List<StudentClusterModel> getClusterAssignments_db(@RequestParam("quizId") String quizId) throws Exception {
+        Instances data = clusteringService.loadData(quizId); // Implement loadData method as needed
+        System.out.println(data);
+        int[] assignments = clusteringService.getClusterAssignments_DBSCAN(quizId); // Implement buildClustererAndGetAssignments method as needed
+
+        List<StudentClusterModel> studentClusters = new ArrayList<>();
+        Map<String, Integer> studentClusterMap = clusteringService.createStudentClusterMap(data, assignments);
+
+        for (Map.Entry<String, Integer> entry : studentClusterMap.entrySet()) {
+            studentClusters.add(new StudentClusterModel(entry.getKey(), entry.getValue()));
+        }
+
+        return studentClusters;
+    }
+
     @GetMapping("/student_records")
     public List<StudentModel> getStudentRecords(@RequestParam("quizId") String quizId) throws Exception {
         Instances data = clusteringService.loadData(quizId); // Implement loadData method as needed

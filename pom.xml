@@ -39,6 +39,14 @@
 			<version>3.8.6</version>
 		</dependency>
 
+		<!-- https://mvnrepository.com/artifact/nz.ac.waikato.cms.weka/optics_dbScan -->
+		<dependency>
+			<groupId>nz.ac.waikato.cms.weka</groupId>
+			<artifactId>optics_dbScan</artifactId>
+			<version>1.0.6</version>
+		</dependency>
+
+
 		<!-- https://mvnrepository.com/artifact/org.jfree/jfreechart -->
 		<dependency>
 			<groupId>org.jfree</groupId>

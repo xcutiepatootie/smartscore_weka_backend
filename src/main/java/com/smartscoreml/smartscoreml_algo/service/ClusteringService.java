@@ -3,6 +3,7 @@ package com.smartscoreml.smartscoreml_algo.service;
 import com.smartscoreml.smartscoreml_algo.model.ClusterAverageValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import weka.clusterers.DBSCAN;
 import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.core.*;
@@ -27,11 +28,10 @@ public class ClusteringService {
     }
 
 
-
     public SimpleKMeans loadSimpleKmeans(Instances data) throws Exception {
         SimpleKMeans sKmeans = new SimpleKMeans();
         int no_Clusters = runFindElbowPoint(data);
-        System.out.println("Number of cluster: "+no_Clusters);
+        System.out.println("Number of cluster: " + no_Clusters);
 
         EuclideanDistance euclideanDistance = new EuclideanDistance();
         euclideanDistance.setDontNormalize(true);
@@ -59,17 +59,66 @@ public class ClusteringService {
 
     public HierarchicalClusterer loadHierarchical(Instances data) throws Exception {
         HierarchicalClusterer hierarchicalClusterer = new HierarchicalClusterer();
+        int no_Clusters = runFindElbowPoint(data);
         String[] options = {"-L", "AVERAGE"};
 
-        hierarchicalClusterer.setNumClusters(2);
+        hierarchicalClusterer.setNumClusters(no_Clusters);
         hierarchicalClusterer.setOptions(options);
 
         hierarchicalClusterer.buildClusterer(data);
+
         return hierarchicalClusterer;
     }
 
+    public DBSCAN loadDBSCAN(Instances data) throws Exception {
+        DBSCAN dbscan = new DBSCAN();
+        ManhattanDistance manhattanDistance = new ManhattanDistance();
 
-    /*public int[] getClusterAssignments_hier(Instances data, HierarchicalClusterer hierarchicalClusterer) throws Exception {
+        data.deleteAttributeAt(0);
+
+        // Set parameters
+        dbscan.setDistanceFunction(manhattanDistance);
+        dbscan.setEpsilon(0.9);
+        dbscan.setMinPoints(6);
+
+        dbscan.buildClusterer(data);
+        System.out.println("Successfully Loaded DBSCAN");
+
+        System.out.println(dbscan);
+
+        return dbscan;
+    }
+
+
+    public static int[] getClusterAssignments_DBSCAN(Instances data, DBSCAN dbscan) {
+        int[] clusterAssignments = new int[data.numInstances()];
+
+        // Get the cluster assignments for each instance and store in the array
+        for (int i = 0; i < data.numInstances(); i++) {
+            Instance instance = data.instance(i);
+            try {
+                clusterAssignments[i] = dbscan.clusterInstance(instance);
+            } catch (Exception e) {
+                clusterAssignments[i] = -1;
+            }
+        }
+        return clusterAssignments;
+    }
+
+
+    public int[] getClusterAssignments_DBSCAN(String quizId) throws Exception {
+        Instances data = loadData(quizId);
+
+        DBSCAN dbscan = loadDBSCAN(data);
+        int[] assignments = getClusterAssignments_DBSCAN(data, dbscan);
+        System.out.println("Assignments: " + Arrays.toString(assignments) + "\n" + dbscan);
+
+        printAverageValues_DBSCAN(data, assignments, dbscan);
+        return assignments;
+    }
+
+
+    public int[] getClusterAssignments_hier(Instances data, HierarchicalClusterer hierarchicalClusterer) throws Exception {
 
         int[] clusterAssignments = new int[data.numInstances()];
 
@@ -86,18 +135,18 @@ public class ClusteringService {
         return clusterAssignments;
     }
 
-    public int[] getClusterAssignments_hier() throws Exception {
-        Instances data = loadData();
+    public int[] getClusterAssignments_hier(String quizId) throws Exception {
+        Instances data = loadData(quizId);
 
         HierarchicalClusterer hierarchicalClusterer = loadHierarchical(data);
-        System.out.println("Assignments: " + Arrays.toString(getClusterAssignments_hier(data,hierarchicalClusterer)) + "\n" + hierarchicalClusterer);
+        System.out.println("Assignments: " + Arrays.toString(getClusterAssignments_hier(data, hierarchicalClusterer)) + "\n" + hierarchicalClusterer);
 
 
         int[] assignments = getClusterAssignments_hier(data, hierarchicalClusterer);
         printAverageValues_hier(data, assignments, hierarchicalClusterer);
         return assignments;
 
-    }*/
+    }
 
     public int[] getClusterAssignments(Instances data, SimpleKMeans kMeans) throws Exception {
         return kMeans.getAssignments();
@@ -160,6 +209,7 @@ public class ClusteringService {
         }
 
     }
+
     public ClusterAverageValues[] calculateAverageValues(Instances data, int[] assignments, SimpleKMeans kMeans) {
         ClusterAverageValues[] clusterAverages = new ClusterAverageValues[kMeans.getNumClusters()];
 
@@ -182,7 +232,6 @@ public class ClusteringService {
 
         return clusterAverages;
     }
-
 
 
     public void printAverageValues_hier(Instances data, int[] assignments, HierarchicalClusterer hierarchicalClusterer) {
@@ -210,9 +259,36 @@ public class ClusteringService {
 
     }
 
+    public void printAverageValues_DBSCAN(Instances data, int[] assignments, DBSCAN dbscan) throws Exception {
+        // Group instances by cluster
+        Instances[] clusters = new Instances[dbscan.numberOfClusters()];
+        for (int i = 0; i < clusters.length; i++) {
+            clusters[i] = new Instances(data, 0);
+        }
+        for (int i = 0; i < data.numInstances(); i++) {
+            int clusterIndex = assignments[i];
+            if (clusterIndex != -1) {
+                clusters[clusterIndex].add(data.instance(i));
+            }
+        }
+
+        // Calculate and print average values for each cluster
+        for (int i = 0; i < clusters.length; i++) {
+            System.out.println("Cluster " + (i) + ":");
+            Instances cluster = clusters[i];
+            for (int j = 0; j < cluster.numAttributes(); j++) {
+                if (cluster.attribute(j).isNumeric()) {
+                    double mean = cluster.meanOrMode(j);
+                    System.out.println("Attribute " + cluster.attribute(j).name() + ": " + mean);
+                }
+            }
+            System.out.println();
+        }
+    }
+
 
     public int runFindElbowPoint(Instances dataParams) throws Exception {
-        System.out.println("Data Params: "+dataParams);
+        System.out.println("Data Params: " + dataParams);
         // Perform KMeans clustering for various values of k
         int maxK = 10; // Maximum number of clusters to try
         double[] wcss = new double[maxK];
