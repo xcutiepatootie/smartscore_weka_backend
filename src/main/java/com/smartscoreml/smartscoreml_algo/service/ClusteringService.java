@@ -62,8 +62,13 @@ public class ClusteringService {
         int no_Clusters = runFindElbowPoint(data);
         String[] options = {"-L", "AVERAGE"};
 
-        hierarchicalClusterer.setNumClusters(no_Clusters);
+        ManhattanDistance manhattanDistance = new ManhattanDistance();
+        manhattanDistance.setDontNormalize(true);
+
+
         hierarchicalClusterer.setOptions(options);
+        hierarchicalClusterer.setDistanceFunction(manhattanDistance);
+        hierarchicalClusterer.setNumClusters(no_Clusters);
 
         hierarchicalClusterer.buildClusterer(data);
 
