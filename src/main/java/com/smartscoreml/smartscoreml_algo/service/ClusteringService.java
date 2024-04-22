@@ -60,15 +60,16 @@ public class ClusteringService {
     public HierarchicalClusterer loadHierarchical(Instances data) throws Exception {
         HierarchicalClusterer hierarchicalClusterer = new HierarchicalClusterer();
         int no_Clusters = runFindElbowPoint(data);
-        String[] options = {"-L", "AVERAGE"};
+
 
         ManhattanDistance manhattanDistance = new ManhattanDistance();
         manhattanDistance.setDontNormalize(true);
 
-
-        hierarchicalClusterer.setOptions(options);
+        hierarchicalClusterer.setLinkType(new SelectedTag("AVERAGE", HierarchicalClusterer.TAGS_LINK_TYPE));
         hierarchicalClusterer.setDistanceFunction(manhattanDistance);
         hierarchicalClusterer.setNumClusters(no_Clusters);
+
+        System.out.println("Options: "+Arrays.toString(hierarchicalClusterer.getOptions()));
 
         hierarchicalClusterer.buildClusterer(data);
 
@@ -129,8 +130,8 @@ public class ClusteringService {
 
         // Get the cluster assignments for each instance and store in the array
         for (int i = 0; i < data.numInstances(); i++) {
-            Instance instance = data.instance(i);
-            clusterAssignments[i] = hierarchicalClusterer.clusterInstance(instance);
+
+            clusterAssignments[i] = hierarchicalClusterer.clusterInstance(data.instance(i));
         }
 
         // Print or process the cluster assignments as needed

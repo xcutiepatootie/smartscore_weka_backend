@@ -13,12 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import weka.clusterers.HierarchicalClusterer;
 import weka.clusterers.SimpleKMeans;
 import weka.core.Instances;
 
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Base64;
 
 @RestController
@@ -45,6 +47,18 @@ public class ChartController {
                 .body(imageBytes);
     }
 
+    @GetMapping("/plot_hc")
+    public ResponseEntity<byte[]> plotClusters_hc(@RequestParam("quizId") String quizId, @RequestParam("xvalue") String xValue, @RequestParam("yvalue") String yValue) throws Exception {
+        Instances data = wekaService.getWekaInstancesFromDB(quizId);
+        HierarchicalClusterer hc = clusteringService.loadHierarchical(data);
+        int[] assignments = clusteringService.getClusterAssignments_hier(quizId);
+
+        byte[] imageBytes = generateClusterPlot_hc(data, assignments, hc, xValue, yValue);
+        return ResponseEntity.ok()
+                .contentType(MediaType.IMAGE_PNG)
+                .body(imageBytes);
+    }
+
     @GetMapping("/plot64")
     public ResponseEntity<String> plotClustersBase64(@RequestParam("quizId") String quizId, @RequestParam("xvalue") String xValue, @RequestParam("yvalue") String yValue) throws Exception {
         Instances data = wekaService.getWekaInstancesFromDB(quizId);
@@ -52,6 +66,20 @@ public class ChartController {
         int[] assignments = clusteringService.getClusterAssignments(quizId);
 
         byte[] imageBytes = generateClusterPlot(data, assignments, kMeans, xValue, yValue);
+        String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
+
+        return ResponseEntity.ok()
+                .contentType(MediaType.TEXT_PLAIN)
+                .body(base64EncodedImage);
+    }
+
+    @GetMapping("/plot64hc")
+    public ResponseEntity<String> plotClustersBase64_hc(@RequestParam("quizId") String quizId, @RequestParam("xvalue") String xValue, @RequestParam("yvalue") String yValue) throws Exception {
+        Instances data = wekaService.getWekaInstancesFromDB(quizId);
+        HierarchicalClusterer hc = clusteringService.loadHierarchical(data);
+        int[] assignments = clusteringService.getClusterAssignments_hier(quizId);
+
+        byte[] imageBytes = generateClusterPlot_hc(data, assignments, hc, xValue, yValue);
         String base64EncodedImage = Base64.getEncoder().encodeToString(imageBytes);
 
         return ResponseEntity.ok()
@@ -109,6 +137,50 @@ public class ChartController {
         return imageBytes;
     }
 
+    private byte[] generateClusterPlot_hc(Instances data, int[] assignments, HierarchicalClusterer hierarchicalClusterer, String xValue, String yValue) {
+
+        int xIndex = getIndexOfAttrib(xValue);
+        int yIndex = getIndexOfAttrib(yValue);
+        System.out.println("HCPLOT");
+        System.out.println();
+        System.out.println(Arrays.toString(assignments));
+        // Create dataset
+        XYSeriesCollection dataset = new XYSeriesCollection();
+        XYSeries[] series = new XYSeries[hierarchicalClusterer.getNumClusters()];
+        for (int i = 0; i < series.length; i++) {
+            series[i] = new XYSeries("Cluster " + (i + 1));
+        }
+        for (int i = 0; i < data.numInstances(); i++) {
+            series[assignments[i]].add(data.instance(i).value(xIndex+1), data.instance(i).value(yIndex+1));
+        }
+        for (int i = 0; i < series.length; i++) {
+
+            dataset.addSeries(series[i]);
+        }
+
+
+
+
+        // Create chart
+        JFreeChart chart = ChartFactory.createScatterPlot("Cluster Plot", xValue, yValue, dataset);
+
+        System.out.println("x: "+xValue);
+        System.out.println("y: "+yValue);
+
+
+        // Convert chart to image bytes
+        byte[] imageBytes = null;
+        try {
+            BufferedImage image = chart.createBufferedImage(800, 600);
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ChartUtils.writeBufferedImageAsPNG(baos, image);
+            imageBytes = baos.toByteArray();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        return imageBytes;
+    }
     private int getIndexOfAttrib(String value) {
         int result = switch (value) {
             case "score" -> 0;
